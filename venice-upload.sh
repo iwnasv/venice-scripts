@@ -1,0 +1,73 @@
+#!/bin/bash
+
+#venice defaults
+SENDER="dspace-uploader"
+LOGFILE="/var/log/rsync.log"
+SERVER="ie-vm2.theo.auth.gr"
+SOURCE="/mnt/g/Process/web/"
+DEST="/mnt/data/web"
+SSHUSER="administrator"
+IMPORT_SCRIPT="venice-import.sh" # Called at the script's end if the user wants it to
+
+function ex () { # explode
+  echo "[ERROR]: $1"
+  exit 1
+}
+
+while getopts "hu:l:s:S:D:v:p:" opt
+do
+  case $opt in
+    h)
+      echo "$(basename $0): Project data sync"
+      echo "Safely send dspace-related data to remote servers over SSH with rsync"
+      echo "Usage: $0 [-u sender-username] [-l logfile] [-s server-address OR -v vm-number(1-3)] [-S sync-source-root] [-D dest-source-root] [-s subdirectory]"
+      echo "For VM #2, source & dest are set; save bandwidth and time by using -s to as low a level as you can"
+      echo "No trailing slashes, ever!"
+      exit 0
+      ;;
+    u)
+      SENDER="$OPTARG" ;;
+    l)
+      LOGFILE="$OPTARG" ;;
+    s)
+      SERVER="$OPTARG" ;;
+    S)
+      if [[ ! -d "$OPTARG" ]]
+      then
+        ex "Source directory not found"
+      fi
+      SOURCE="$OPTARG" ;;
+    D)
+      DEST="$OPTARG" ;;
+    v)
+      if [[ $OPTARG -ge 1 && $OPTARG -le 3 ]]
+      then
+        SERVER="ie-vm${OPTARG}.theo.auth.gr"
+      else
+        ex "Venice VMs range is 1-3"
+      fi
+      ;;
+    p)
+      SUBDIR="$OPTARG" ;;
+  esac
+done
+
+rsync -e "sudo -u $SENDER ssh -i ~${SENDER}/.ssh/id_rsa" -zh --info=name,progress2 --ignore-existing --log-file="$LOGFILE" -r "$SOURCE/${SUBDIR}" "dspace@${SERVER}:$DEST/$SUBDIR"
+if [[ $? -eq 0 ]]
+then
+  echo "Done; would you like to import the data to dspace?"
+  echo "Type 'n' to quit now, otherwise write the arguments you want to pass to the import script."
+  read answer # $answer is either n (quit) or arguments
+  if [[ $answer != "n" ]]
+  then
+    if [[ ${IMPORT_SCRIPT:0:5} == "https" ]]
+    then
+      #if it's a url, curl it, otherwise just execute it
+      curl "$IMPORT_SCRIPT" | ssh $SSHUSER@$SERVER -i ~/.ssh/id_rsa "bash -s $answer" | tee ${LOGFILE:0:-4}-ssh.log
+    else
+      ssh $SSHUSER@$SERVER -i ~/.ssh/id_rsa "bash -s $answer" < $IMPORT_SCRIPT | tee ${LOGFILE:0:-4}-ssh.log
+    fi
+  else
+    exit 0
+  fi
+fi
