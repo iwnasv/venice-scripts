@@ -3,11 +3,12 @@
 #venice defaults
 SENDER="dspace-uploader"
 LOGFILE="/var/log/rsync.log"
-SERVER="ie-vm2.theo.auth.gr"
+SERVER="ie-vm1.theo.auth.gr"
 SOURCE="/mnt/g/Process/web/"
 DEST="/mnt/data/web"
+SSHSERVER=$SERVER
 SSHUSER="administrator"
-IMPORT_SCRIPT="venice-import.sh" # Called at the script's end if the user wants it to
+IMPORT_SCRIPT="https://github.com/iwnasv/venice-scripts/raw/main/venice-import.sh" # Called at the script's end if the user wants it to
 
 function ex () { # explode
   echo "[ERROR]: $1"
@@ -63,11 +64,14 @@ then
     if [[ ${IMPORT_SCRIPT:0:5} == "https" ]]
     then
       #if it's a url, curl it, otherwise just execute it
-      curl "$IMPORT_SCRIPT" | ssh $SSHUSER@$SERVER -i ~/.ssh/id_rsa "bash -s $answer" | tee ${LOGFILE:0:-4}-ssh.log
+      curl "$IMPORT_SCRIPT" | ssh $SSHUSER@$SERVER -i ~/.ssh/id_rsa "bash -s -- $answer" | tee ${LOGFILE:0:-4}-ssh.log
     else
-      ssh $SSHUSER@$SERVER -i ~/.ssh/id_rsa "bash -s $answer" < $IMPORT_SCRIPT | tee ${LOGFILE:0:-4}-ssh.log
+      ssh $SSHUSER@$SERVER -i ~/.ssh/id_rsa "bash -s -- $answer" < $IMPORT_SCRIPT | tee ${LOGFILE:0:-4}-ssh.log
     fi
   else
     exit 0
   fi
+else
+  echo "rsync failed! refer to $LOGFILE"
+  exit 1
 fi

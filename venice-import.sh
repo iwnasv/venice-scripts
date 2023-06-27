@@ -5,7 +5,7 @@
 # Venice defaults
 COLLECTION="a81650e4-a549-4d3c-8576-72d0e5820d51"
 EPERSON="info@ie.org"
-SPLIT_URL="" # split.sh on github; fetch if not found
+SPLIT_URL="https://github.com/iwnasv/venice-scripts/raw/main/split.sh"
 
 askme () {
     if [[ -n $ASKME ]]
@@ -42,7 +42,7 @@ fi
 
 cd ~dspace/importers
 askme "$pwd: about to split importers"
-split.sh || ../split.sh # Try to execute split.sh from either $PATH or ~dspace, or fail
+split.sh || ../split.sh || curl -s https://github.com/iwnasv/venice-scripts/raw/main/split.sh | bash -s
 # To do: ANSIBLE copy scripts to dspace's $HOME, github hosted split.sh with curl
 if [[ $? -ne 0 ]]
 then
