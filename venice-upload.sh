@@ -6,7 +6,6 @@ LOGFILE="/var/log/rsync.log"
 SERVER="ie-vm1.theo.auth.gr"
 SOURCE="/mnt/g/Process/web/"
 DEST="/mnt/data/web"
-SSHSERVER=$SERVER
 SSHUSER="administrator"
 IMPORT_SCRIPT="https://github.com/iwnasv/venice-scripts/raw/main/venice-import.sh" # Called at the script's end if the user wants it to
 
@@ -61,9 +60,15 @@ then
   read answer # $answer is either n (quit) or arguments
   if [[ $answer != "n" ]]
   then
+    echo "Input SSH server, or press enter to use $SERVER"
+    read SSHSERVER
+    if [[ -z $SSHSERVER ]]
+    then
+      $SSHSERVER = $SERVER
+    fi
     if [[ ${IMPORT_SCRIPT:0:5} == "https" ]]
     then
-      #if it's a url, curl it, otherwise just execute it
+      # if it's a url, curl it, otherwise just execute it
       curl "$IMPORT_SCRIPT" | ssh $SSHUSER@$SERVER -i ~/.ssh/id_rsa "bash -s -- $answer" | tee ${LOGFILE:0:-4}-ssh.log
     else
       ssh $SSHUSER@$SERVER -i ~/.ssh/id_rsa "bash -s -- $answer" < $IMPORT_SCRIPT | tee ${LOGFILE:0:-4}-ssh.log
