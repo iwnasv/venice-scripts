@@ -25,11 +25,28 @@ let 'dircount = 0, batchcount = 0'
 
 if [[ $(basename $(pwd)) != "importers" ]]
 then
-  echo "Warning: split.sh is run on a directory not named 'importers'"
+  echo "Warning: split.sh is run in a directory not named 'importers'"
   echo "Press enter if you're sure this directory contains dspace importers"
   echo "Changes WILL be written on disk if you do so! CTRL+C kills me"
   echo "(you probably want to cd ~dspace/importers)"
   read
+fi
+if [[ ! -w . ]]
+then
+  echo "Error: split.sh is run in a directory it doesn't have write permission in."
+  echo "Please type a user to sudo -u as (or su if that fails) and resume operation."
+  echo "examples: dspace, root (CTRL+C kills me)"
+  read NEWSER #new user. haha.
+  if [[ $(id -u $NEWSER) -eq 0 ]]
+  then
+    sudo -i || su
+  elif [[ $(id -u $NEWSER) -gt 0 ]]
+  then
+    sudo -i -u $NEWSER || su $NEWSER
+  else
+    echo "$NEWSER is not a real user, there's only so much I can do... exiting :("
+    exit 1
+  fi
 fi
 
 for dir in *
