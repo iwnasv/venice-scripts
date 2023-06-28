@@ -6,7 +6,7 @@
 COLLECTION="a81650e4-a549-4d3c-8576-72d0e5820d51"
 EPERSON="info@ie.org"
 SPLIT="https://github.com/iwnasv/venice-scripts/raw/main/split.sh"
-IMPORTERSDIR="~dspace/importers"
+IMPORTERSDIR=~dspace/importers
 
 askme () {
     if [[ -n $ASKME ]]
@@ -69,11 +69,11 @@ fi
 
 askme "Confriming dspace user shell access..."
 # You can comment this line out if your sudo config doesn't allow for a grace period, causing you to authenticate manually twice
-sudo -u dspace true
-if [[ $? -ne 0 ]]
-then
+sudo -u dspace true || {
   echo "sudo failure: make sure dspace user is present on the system, you're a sudoer, and your credentials are correct"
-fi
+  exit 1
+}
+
 for batch in $IMPORTERSDIR/*
 do
   if [[ ! -d $batch ]]
@@ -86,22 +86,16 @@ do
     DSPACE_IMPORT_LOG="$IMPORTERSDIR/$(basename $batch).log"
     echo $(date '+%x %X') Using batch: $batch, writing mapfile: ~dspace/mapfiles/mapfile_$(basename $batch), log: $DSPACE_IMPORT_LOG
     askme "About to run dspace import. $EPRESON, $COLLECTION, $batch"
-    sudo -u dspace /opt/dspace/bin/dspace import -a -e $EPERSON -c $COLLECTION -s "$batch" -m ~dspace/mapfiles/mapfile_$(basename $batch) -w > $DSPACE_IMPORT_LOG
-    if [[ $? -ne 0 ]]
-    then
+    echo sudo -u dspace /opt/dspace/bin/dspace import -a -e $EPERSON -c $COLLECTION -s "$batch" -m ~dspace/mapfiles/mapfile_$(basename $batch) -w > $DSPACE_IMPORT_LOG || {
       echo "dspace import failed, quitting... $(date '+%x %X')"
-    else
-      echo "batch done!"
-    fi
+      exit 1
+    }
+    echo "batch done!"
     if [[ -f $IMPORTERSDIR/batch-archive.tar.xz ]]
     then
-      tar -Juf $IMPORTERSDIR/batch-archive.tar.xz $batch/ # it's recommended to use a trailing slash
+      tar -Juf $IMPORTERSDIR/batch-archive.tar.xz $batch/ && rm -r $batch # it's recommended to use a trailing slash
     else
-      tar -Jcf $IMPORTERSDIR/batch-archive.tar.xz $batch/
-    fi
-    if [[ $? -eq 0 ]]
-    then
-      rm -r $batch
+      tar -Jcf $IMPORTERSDIR/batch-archive.tar.xz $batch/ && rm -r $batch
     fi
   fi
 done
