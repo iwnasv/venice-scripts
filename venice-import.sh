@@ -6,6 +6,7 @@
 COLLECTION="a81650e4-a549-4d3c-8576-72d0e5820d51"
 EPERSON="info@ie.org"
 SPLIT="https://github.com/iwnasv/venice-scripts/raw/main/split.sh"
+IMPORTERSDIR="~dspace/importers"
 
 askme () {
     if [[ -n $ASKME ]]
@@ -34,7 +35,7 @@ do
   esac
 done
 
-if [[ ! -d ~dspace/importers || ! -d ~dspace/mapfiles || ! -w ~dspace/importers || ! -w ~dspace/mapfiles ]] # both directories present and writable
+if [[ ! -d $IMPORTERSDIR || ! -d ~dspace/mapfiles || ! -w $IMPORTERSDIR || ! -w ~dspace/mapfiles ]] # both directories present and writable
 # using -d as well to ensure it's a directory and not a regular file
 then
   echo "This script expects the importers and mapfiles directories present under ~dspace and writable by the dspace user."
@@ -42,9 +43,9 @@ then
 fi
 
 
-if [[ -f  ~dspace/importers/batch-archive.tar.xz ]]
+if [[ -f  $IMPORTERSDIR/batch-archive.tar.xz ]]
 then
-  echo "OLD: $(sha256sum -z ~dspace/importers/batch-archive.tar.xz).old" > ~dspace/importers-backup-integrity.txt
+  echo "OLD: $(sha256sum -z $IMPORTERSDIR/batch-archive.tar.xz).old" > ~dspace/importers-backup-integrity.txt
   date "+%x %X" >> ~dspace/importers-backup-integrity.txt
 fi
 echo "Couldn't back up archive, ensure it's present and writable"
@@ -62,7 +63,7 @@ else
   }
 fi
 
-cd ~dspace/importers
+cd $IMPORTERSDIR
 askme "$pwd: about to split importers"
 
 # To do: ANSIBLE copy scripts to dspace's $HOME, github hosted split.sh with curl
@@ -79,7 +80,7 @@ if [[ $? -ne 0 ]]
 then
   echo "sudo failure: make sure dspace user is present on the system, you're a sudoer, and your credentials are correct"
 fi
-for batch in ~dspace/importers/*
+for batch in $IMPORTERSDIR/*
 do
   if [[ ! -d $batch ]]
   then
@@ -88,7 +89,7 @@ do
       echo "Warning: file $batch found; skipping it, I expect importers to be directories."
     fi
   else
-    DSPACE_IMPORT_LOG="~dspace/importers/$(basename $batch).log"
+    DSPACE_IMPORT_LOG="$IMPORTERSDIR/$(basename $batch).log"
     echo $(date '+%x %X') Using batch: $batch, writing mapfile: ~dspace/mapfiles/mapfile_$(basename $batch), log: $DSPACE_IMPORT_LOG
     askme "About to run dspace import. $EPRESON, $COLLECTION, $batch"
     sudo -u dspace /opt/dspace/bin/dspace import -a -e $EPERSON -c $COLLECTION -s "$batch" -m ~dspace/mapfiles/mapfile_$(basename $batch) -w > $DSPACE_IMPORT_LOG
@@ -98,11 +99,11 @@ do
     else
       echo "batch done!"
     fi
-    if [[ -f ~dspace/importers/batch-archive.tar.xz ]]
+    if [[ -f $IMPORTERSDIR/batch-archive.tar.xz ]]
     then
-      tar -Juf ~dspace/importers/batch-archive.tar.xz $batch/ # it's recommended to use a trailing slash
+      tar -Juf $IMPORTERSDIR/batch-archive.tar.xz $batch/ # it's recommended to use a trailing slash
     else
-      tar -Jcf ~dspace/importers/batch-archive.tar.xz $batch/
+      tar -Jcf $IMPORTERSDIR/batch-archive.tar.xz $batch/
     fi
     if [[ $? -eq 0 ]]
     then
@@ -111,4 +112,4 @@ do
   fi
 done
 
-sha256sum ~dspace/importers/batch-archive.tar.xz >> ~dspace/importers-backup-integrity.txt
+sha256sum $IMPORTERSDIR/batch-archive.tar.xz >> ~dspace/importers-backup-integrity.txt
