@@ -5,7 +5,7 @@
 # Venice defaults
 COLLECTION="a81650e4-a549-4d3c-8576-72d0e5820d51"
 EPERSON="info@ie.org"
-SPLIT_URL="https://github.com/iwnasv/venice-scripts/raw/main/split.sh"
+SPLIT="https://github.com/iwnasv/venice-scripts/raw/main/split.sh"
 
 askme () {
     if [[ -n $ASKME ]]
@@ -34,15 +34,37 @@ do
   esac
 done
 
-if [[ ! -d ~dspace/importers || ! -d ~dspace/mapfiles ]]
+if [[ ! -d ~dspace/importers || ! -d ~dspace/mapfiles || ! -w ~dspace/importers || ! -w ~dspace/mapfiles ]] # both directories present and writable
+# using -d as well to ensure it's a directory and not a regular file
 then
   echo "This script expects the importers and mapfiles directories present under ~dspace and writable by the dspace user."
   exit 1
 fi
 
+
+if [[ -f  ~dspace/importers/batch-archive.tar.xz ]]
+then
+  echo "OLD: $(sha256sum -z ~dspace/importers/batch-archive.tar.xz).old" > ~dspace/importers-backup-integrity.txt
+  date "+%x %X" >> ~dspace/importers-backup-integrity.txt
+fi
+echo "Couldn't back up archive, ensure it's present and writable"
+if [[ ${SPLIT:0:5} == "https" ]]
+then
+  # if it's a url, curl it, otherwise just execute it
+  curl "$SPLIT" | bash -s || {
+    echo "split.sh failure"
+    exit 1
+  }
+else
+  bash "$SPLIT" || {
+    echo "split.sh failure"
+    exit 1
+  }
+fi
+
 cd ~dspace/importers
 askme "$pwd: about to split importers"
-split.sh || ../split.sh || curl -s https://github.com/iwnasv/venice-scripts/raw/main/split.sh | bash -s
+
 # To do: ANSIBLE copy scripts to dspace's $HOME, github hosted split.sh with curl
 if [[ $? -ne 0 ]]
 then
@@ -61,7 +83,10 @@ for batch in ~dspace/importers/*
 do
   if [[ ! -d $batch ]]
   then
-    echo "Warning: innappropriate file $batch found; skipping it."
+    if [[ $(basename $batch) != "batch-archive.tar.xz" ]]
+    then
+      echo "Warning: file $batch found; skipping it, I expect importers to be directories."
+    fi
   else
     DSPACE_IMPORT_LOG="~dspace/importers/$(basename $batch).log"
     echo $(date '+%x %X') Using batch: $batch, writing mapfile: ~dspace/mapfiles/mapfile_$(basename $batch), log: $DSPACE_IMPORT_LOG
@@ -73,5 +98,17 @@ do
     else
       echo "batch done!"
     fi
+    if [[ -f ~dspace/importers/batch-archive.tar.xz ]]
+    then
+      tar -Juf ~dspace/importers/batch-archive.tar.xz $batch/ # it's recommended to use a trailing slash
+    else
+      tar -Jcf ~dspace/importers/batch-archive.tar.xz $batch/
+    fi
+    if [[ $? -eq 0 ]]
+    then
+      rm -r $batch
+    fi
   fi
 done
+
+sha256sum ~dspace/importers/batch-archive.tar.xz >> ~dspace/importers-backup-integrity.txt
