@@ -6,7 +6,7 @@ LOGFILE="/var/log/rsync.log"
 SERVER="ie-vm1.theo.auth.gr"
 SOURCE="/mnt/g/Process/web/"
 DEST="/mnt/data/web"
-SSHUSER="administrator"
+SSHUSER="dspace" # Think about this a little bit...
 IMPORT_SCRIPT="https://github.com/iwnasv/venice-scripts/raw/main/venice-import.sh" # Called at the script's end if the user wants it to
 
 function ex () { # explode
