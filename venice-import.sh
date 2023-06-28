@@ -27,6 +27,7 @@ do
       PASSWORD="$OPTARG" ;; # echo $PASSWORD | sudo -u dspace -S
     C)
       ASKME="TRUE" ;; # ask me before doing anything; for tests and scripting
+      # note: TRUE is a string, not a boolean.
     h)
       echo "$(basename $0): Project data dspace import"
       echo "Usage: $(basename $0) [-c COLLECTION] [-e E-PERSON] [-p DSPACE_UNIX_USER_PASSWORD] [-C]"
@@ -42,38 +43,31 @@ then
   exit 1
 fi
 
-
 if [[ -f  $IMPORTERSDIR/batch-archive.tar.xz ]]
 then
   echo "OLD: $(sha256sum -z $IMPORTERSDIR/batch-archive.tar.xz).old" > ~dspace/importers-backup-integrity.txt
   date "+%x %X" >> ~dspace/importers-backup-integrity.txt
 fi
-echo "Couldn't back up archive, ensure it's present and writable"
-if [[ ${SPLIT:0:5} == "https" ]]
-then
-  # if it's a url, curl it, otherwise just execute it
-  curl "$SPLIT" | bash -s || {
-    echo "split.sh failure"
-    exit 1
-  }
-else
-  bash "$SPLIT" || {
-    echo "split.sh failure"
-    exit 1
-  }
-fi
 
 cd $IMPORTERSDIR
 askme "$pwd: about to split importers"
 
-# To do: ANSIBLE copy scripts to dspace's $HOME, github hosted split.sh with curl
-if [[ $? -ne 0 ]]
+if [[ ${SPLIT:0:5} == "https" ]]
 then
-  echo "Batch-splitting importers failed!"
-  exit 1
+  # if it's a url, curl it, otherwise just execute it
+  curl -s "$SPLIT" | bash -s || {
+    echo "Batch-splitting importers failed"
+    exit 1
+  }
+else
+  bash "$SPLIT" || {
+    echo "Batch-splitting importers failed"
+    exit 1
+  }
 fi
+# To do: ANSIBLE copy scripts to dspace's $HOME, github hosted split.sh with curl
 
-echo "Confriming dspace user shell access..."
+askme "Confriming dspace user shell access..."
 # You can comment this line out if your sudo config doesn't allow for a grace period, causing you to authenticate manually twice
 sudo -u dspace true
 if [[ $? -ne 0 ]]
