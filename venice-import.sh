@@ -84,7 +84,8 @@ do
       echo "Warning: file $batch found; skipping it, I expect importers to be directories."
     fi
   else
-    DSPACE_IMPORT_LOG="$IMPORTERSDIR/../$(basename $batch).log"
+    DSPACE_IMPORT_LOG="$IMPORTERSDIR/../import-logs/$(basename $batch).log" #this is far from great but it does our job
+    #you may manually need to change the directory here to fit another project in the future. I'd rather not add more parameters...
     echo $(date '+%x %X') -- Using batch: $batch, writing mapfile: ~dspace/mapfiles/mapfile_$(basename $batch), log: $DSPACE_IMPORT_LOG
     askme "About to run dspace import. $EPERSON, $COLLECTION, $batch"
     sudo -u dspace /opt/dspace/bin/dspace import -a -e $EPERSON -c $COLLECTION -s "$batch" -m ~dspace/mapfiles/mapfile_$(basename $batch) -w > $DSPACE_IMPORT_LOG || {
@@ -92,7 +93,8 @@ do
       exit 1
     }
     echo "batch done!"
-    zip -qr $IMPORTERSDIR/batch-archive.zip $batch/ && rm -r $batch
+    zip -jqr $IMPORTERSDIR/batch-archive.zip $batch/ && rm -r $batch
+    #   ^ no leading directories (/home/dspace/...), quiet output, recursive
   fi
 done
 
