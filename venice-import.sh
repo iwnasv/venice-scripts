@@ -14,6 +14,7 @@ askme () {
       echo "$1"
       echo "Press enter to continue or ctrl+c to quit"
     fi
+    read
 }
 
 while getopts "c:e:p:C" opt
@@ -50,7 +51,7 @@ then
 fi
 
 cd $IMPORTERSDIR
-askme "$pwd: about to split importers"
+askme "$(pwd): about to split importers"
 
 if [[ ${SPLIT:0:5} == "https" ]]
 then
