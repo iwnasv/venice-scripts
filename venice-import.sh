@@ -84,15 +84,15 @@ do
       echo "Warning: file $batch found; skipping it, I expect importers to be directories."
     fi
   else
-    DSPACE_IMPORT_LOG="$IMPORTERSDIR/$(basename $batch).log"
-    echo $(date '+%x %X') Using batch: $batch, writing mapfile: ~dspace/mapfiles/mapfile_$(basename $batch), log: $DSPACE_IMPORT_LOG
-    askme "About to run dspace import. $EPRESON, $COLLECTION, $batch"
-    echo sudo -u dspace /opt/dspace/bin/dspace import -a -e $EPERSON -c $COLLECTION -s "$batch" -m ~dspace/mapfiles/mapfile_$(basename $batch) -w > $DSPACE_IMPORT_LOG || {
+    DSPACE_IMPORT_LOG="$IMPORTERSDIR/../$(basename $batch).log"
+    echo $(date '+%x %X') -- Using batch: $batch, writing mapfile: ~dspace/mapfiles/mapfile_$(basename $batch), log: $DSPACE_IMPORT_LOG
+    askme "About to run dspace import. $EPERSON, $COLLECTION, $batch"
+    sudo -u dspace /opt/dspace/bin/dspace import -a -e $EPERSON -c $COLLECTION -s "$batch" -m ~dspace/mapfiles/mapfile_$(basename $batch) -w > $DSPACE_IMPORT_LOG || {
       echo "dspace import failed, quitting... $(date '+%x %X')"
       exit 1
     }
     echo "batch done!"
-    zip -r $IMPORTERSDIR/batch-archive.zip $batch/ && rm -r $batch
+    zip -qr $IMPORTERSDIR/batch-archive.zip $batch/ && rm -r $batch
   fi
 done
 
