@@ -43,9 +43,9 @@ then
   exit 1
 fi
 
-if [[ -f  $IMPORTERSDIR/batch-archive.tar.gz ]]
+if [[ -f  $IMPORTERSDIR/batch-archive.zip ]]
 then
-  echo "OLD: $(sha256sum -z $IMPORTERSDIR/batch-archive.tar.gz).old" > ~dspace/importers-backup-integrity.txt
+  echo "OLD: $(sha256sum -z $IMPORTERSDIR/batch-archive.zip).old" > ~dspace/importers-backup-integrity.txt
   date "+%x %X" >> ~dspace/importers-backup-integrity.txt
 fi
 
@@ -78,7 +78,7 @@ for batch in $IMPORTERSDIR/*
 do
   if [[ ! -d $batch ]]
   then
-    if [[ $(basename $batch) != "batch-archive.tar.gz" ]]
+    if [[ $(basename $batch) != "batch-archive.zip" ]]
     then
       echo "Warning: file $batch found; skipping it, I expect importers to be directories."
     fi
@@ -91,13 +91,8 @@ do
       exit 1
     }
     echo "batch done!"
-    if [[ -f $IMPORTERSDIR/batch-archive.tar.gz ]]
-    then
-      tar -rf $IMPORTERSDIR/batch-archive.tar.gz $batch/ && rm -r $batch # it's recommended to use a trailing slash
-    else
-      tar -caf $IMPORTERSDIR/batch-archive.tar.gz $batch/ && rm -r $batch
-    fi
+    zip -r $IMPORTERSDIR/batch-archive.zip $batch/ && rm -r $batch
   fi
 done
 
-sha256sum $IMPORTERSDIR/batch-archive.tar.gz >> ~dspace/importers-backup-integrity.txt
+sha256sum $IMPORTERSDIR/batch-archive.zip >> ~dspace/importers-backup-integrity.txt
