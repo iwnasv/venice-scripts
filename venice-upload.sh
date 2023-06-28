@@ -64,12 +64,12 @@ then
     read SSHSERVER
     if [[ -z $SSHSERVER ]]
     then
-      $SSHSERVER = $SERVER
+      SSHSERVER="$SERVER"
     fi
     if [[ ${IMPORT_SCRIPT:0:5} == "https" ]]
     then
       # if it's a url, curl it, otherwise just execute it
-      curl "$IMPORT_SCRIPT" | ssh $SSHUSER@$SSHSERVER -i ~/.ssh/id_rsa "bash -s -- $answer" | tee ${LOGFILE:0:-4}-ssh.log
+      curl -s "$IMPORT_SCRIPT" | ssh $SSHUSER@$SSHSERVER -i ~/.ssh/id_rsa "bash -s -- $answer" | tee ${LOGFILE:0:-4}-ssh.log
     else
       ssh $SSHUSER@$SSHSERVER -i ~/.ssh/id_rsa "bash -s -- $answer" < $IMPORT_SCRIPT | tee ${LOGFILE:0:-4}-ssh.log
     fi
