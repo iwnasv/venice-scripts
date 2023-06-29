@@ -88,7 +88,12 @@ do
     #you may manually need to change the directory here to fit another project in the future. I'd rather not add more parameters...
     echo $(date '+%x %X') -- Using batch: $batch, writing mapfile: ~dspace/mapfiles/mapfile_$(basename $batch), log: $DSPACE_IMPORT_LOG
     askme "About to run dspace import. $EPERSON, $COLLECTION, $batch"
-    sudo -u dspace /opt/dspace/bin/dspace import -a -e $EPERSON -c $COLLECTION -s "$batch" -m ~dspace/mapfiles/mapfile_$(basename $batch) -w > $DSPACE_IMPORT_LOG || {
+    sudo -u dspace /opt/dspace/bin/dspace \
+    import -a -e $EPERSON -c $COLLECTION -s "$batch" -m ~dspace/mapfiles/mapfile_$(basename $batch) -w \
+    > $DSPACE_IMPORT_LOG && {
+      # test me
+      python3 setValues.py --project 'venetia' --items $(ls -1q $batch) --uploaded True
+    } || {
       echo "dspace import failed, quitting... $(date '+%x %X')"
       exit 1
     }
