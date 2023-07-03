@@ -4,7 +4,7 @@
 LOGFILE=/var/log/dspace-import-batch-split.log
 BATCHSIZE=500 # to do: argument
 log () {
-  if [[ -f $LOGFILE ]]
+  if [[ -w $LOGFILE ]]
   then
     echo $1 >> $LOGFILE
   else
@@ -37,7 +37,7 @@ then
   echo "Please type a user to sudo -u as (or su if that fails) and resume operation."
   echo "examples: dspace, root (CTRL+C kills me)"
   read NEWSER #new user. haha.
-  if [[ $(id -u $NEWSER) -eq 0 ]]
+  if [[ $(id -u $NEWSER) -eq 0 ]] # handle root login elegantly, and ensure new user is real before login attempts
   then
     sudo -i || su
   elif [[ $(id -u $NEWSER) -gt 0 ]]
