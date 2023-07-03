@@ -42,7 +42,7 @@ do
     v)
       if [[ $OPTARG -ge 1 && $OPTARG -le 3 ]]
       then
-        SERVER="ie-vm${OPTARG}.theo.auth.gr"
+        SERVER="ie-vm${OPTARG}.theo.auth.gr" # to do: sed?
       else
         ex "Venice VMs range is 1-3"
       fi
@@ -56,10 +56,12 @@ if ! sudo -v >/dev/null &2>1
 then
   echo "For best experience, sudoer power is recommended."
 fi
-rsync -e "sudo -u $SENDER ssh -i ~${SENDER}/.ssh/id_rsa" -zh --info=name,progress2 --ignore-existing --log-file="$LOGFILE" -r "$SOURCE/$SUBDIR" "${SENDER}@${SERVER}:$DEST/$SUBDIR"
+rsync -e "sudo -u $SENDER ssh -i ~${SENDER}/.ssh/id_rsa" -zh --info=name,progress2 --ignore-existing --log-file="$LOGFILE" -r "$SOURCE/$SUBDIR" "dspace@${SERVER}:$DEST/$SUBDIR"
 if [[ $? -eq 0 ]]
 then
   echo "Done; would you like to import the data to dspace?"
+  echo "Reminder that you copied data to $DEST on $SERVER."
+  echo "This next step is only relevant for importers, not media data."
   echo "Type 'n' to quit now, otherwise write the arguments you want to pass to the import script."
   read answer # $answer is either n (quit) or arguments
   if [[ $answer != "n" ]]
