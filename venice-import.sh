@@ -70,10 +70,11 @@ fi
 
 askme "Confriming dspace user shell access..."
 # You can comment this line out if your sudo config doesn't allow for a grace period, causing you to authenticate manually twice
-sudo -u dspace true || {
+if ! sudo -u dspace -v >/dev/null &2>1
+then
   echo "sudo failure: make sure dspace user is present on the system, you're a sudoer, and your credentials are correct"
   exit 1
-}
+fi
 
 for batch in $IMPORTERSDIR/*
 do

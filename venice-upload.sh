@@ -52,6 +52,10 @@ do
   esac
 done
 
+if ! sudo -v >/dev/null &2>1
+then
+  echo "For best experience, sudoer power is recommended."
+fi
 rsync -e "sudo -u $SENDER ssh -i ~${SENDER}/.ssh/id_rsa" -zh --info=name,progress2 --ignore-existing --log-file="$LOGFILE" -r "$SOURCE/$SUBDIR" "${SENDER}@${SERVER}:$DEST/$SUBDIR"
 if [[ $? -eq 0 ]]
 then
