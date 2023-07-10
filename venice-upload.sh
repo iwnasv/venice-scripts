@@ -21,7 +21,7 @@ do
       echo "$(basename $0): Project data sync"
       echo "Safely send dspace-related data to remote servers over SSH with rsync"
       echo "Usage: $0 [-u sender-username] [-l logfile] [-s server-address OR -v vm-number(1-3)] [-S sync-source-root] [-D dest-source-root] [-p subdirectory]"
-      echo "For VM #2, source & dest are set; save bandwidth and time by using -s to as low a level as you can"
+      echo "For VM #2, source & dest are set; save bandwidth and time by using -p to as low a level as you can"
       echo "No trailing slashes, ever!"
       exit 0
       ;;
@@ -52,11 +52,11 @@ do
   esac
 done
 
-if ! sudo -v >/dev/null &2>1
+if ! sudo -v >/dev/null 2>/dev/null
 then
   echo "For best experience, sudoer power is recommended."
 fi
-rsync -e "sudo -u $SENDER ssh -i ~${SENDER}/.ssh/id_rsa" -zh --info=name,progress2 --ignore-existing --log-file="$LOGFILE" -r "$SOURCE/$SUBDIR" "dspace@${SERVER}:$DEST/$SUBDIR"
+rsync -e "ssh -i ~${SENDER}/.ssh/id_rsa" -zh --info=name,progress2 --ignore-existing --log-file="$LOGFILE" -r "${SOURCE}/${SUBDIR}" "dspace@${SERVER}:${DEST}/${SUBDIR}"
 if [[ $? -eq 0 ]]
 then
   echo "Done; would you like to import the data to dspace?"
