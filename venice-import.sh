@@ -2,11 +2,14 @@
 # USAGE: Not much to do, you just call the script this time
 # It expects ~dspace to have the importers and mapfiles directories
 
-# Venice defaults
-COLLECTION="a81650e4-a549-4d3c-8576-72d0e5820d51"
-EPERSON="info@ie.org"
-SPLIT="https://github.com/iwnasv/venice-scripts/raw/main/split.sh"
-IMPORTERSDIR=~dspace/importers
+# Rizar defaults
+COLLECTION=b8592740-5693-4c94-832e-b147564c1127
+EPERSON="info@res.gr"
+IMPORTERSDIR=/opt/data/importers
+ZIP=/home/dspace/importers/archive.zip
+DSPACE_IMPORT_LOG="/home/dspace/import-logs/0.log"
+DSPACE_IMPORT_LOG_FAIL="/home/dspace/import-logs/fail.log"
+SUCCESSFUL=/tmp/successful-ids
 
 askme () {
     if [[ -n $ASKME ]]
@@ -44,10 +47,21 @@ then
   exit 1
 fi
 
-if [[ -f  $IMPORTERSDIR/batch-archive.zip ]]
+if [[ -f $SUCCESSFUL ]]
 then
-  echo "OLD: $(sha256sum -z $IMPORTERSDIR/batch-archive.zip).old" > ~dspace/importers-backup-integrity.txt
+  rm $SUCCESSFUL
+fi
+
+if [[ -f  $ZIP ]]
+then
+  cp $ZIP ${ZIP}.old
+  echo OLD: $(sha256sum -z "$ZIP") > ~dspace/importers-backup-integrity.txt
   date "+%x %X" >> ~dspace/importers-backup-integrity.txt
+fi
+
+if [[ -f $DSPACE_IMPORT_LOG_FAIL ]]
+then
+  mv $DSPACE_IMPORT_LOG_FAIL ${DSPACE_IMPORT_LOG_FAIL}.old
 fi
 
 cd $IMPORTERSDIR
@@ -61,6 +75,7 @@ then
     exit 1
   }
 else
+  sleep 30
   bash "$SPLIT" || {
     echo "Batch-splitting importers failed"
     exit 1
@@ -70,38 +85,39 @@ fi
 
 askme "Confriming dspace user shell access..."
 # You can comment this line out if your sudo config doesn't allow for a grace period, causing you to authenticate manually twice
-if ! sudo -u dspace -v >/dev/null &2>1
+if ! sudo -v >/dev/null 2>/dev/null
 then
-  echo "sudo failure: make sure dspace user is present on the system, you're a sudoer, and your credentials are correct"
-  exit 1
+  echo "sudo failure: make sure you're a sudoer, and your credentials are correct"
+  #exit 1
 fi
 
 for batch in $IMPORTERSDIR/*
 do
+  DSPACE_IMPORT_LOG="/home/dspace/import-logs/$(basename $batch).log"
   if [[ ! -d $batch ]]
   then
-    if [[ $(basename $batch) != "batch-archive.zip" ]]
-    then
-      echo "Warning: file $batch found; skipping it, I expect importers to be directories."
-    fi
+    echo "Warning: file $batch found; skipping it, I expect importers to be directories." | tee $DSPACE_IMPORT_LOG_FAIL
   else
-    DSPACE_IMPORT_LOG="$IMPORTERSDIR/../import-logs/$(basename $batch).log" #this is far from great but it does our job
-    #you may manually need to change the directory here to fit another project in the future. I'd rather not add more parameters...
-    echo $(date '+%x %X') -- Using batch: $batch, writing mapfile: ~dspace/mapfiles/mapfile_$(basename $batch), log: $DSPACE_IMPORT_LOG
+    echo "[$(date '+%x %X')] -- Using batch: $batch"
     askme "About to run dspace import. $EPERSON, $COLLECTION, $batch"
+    #to do: query the db for this specific id before import, update sheets (auto mporei na ginei eite synolika sto upload.sh eite edw me ligo config)
     sudo -u dspace /opt/dspace/bin/dspace \
     import -a -e $EPERSON -c $COLLECTION -s "$batch" -m ~dspace/mapfiles/mapfile_$(basename $batch) -w \
-    > $DSPACE_IMPORT_LOG && {
-      # test me
-      python3 setValues.py --project 'venetia' --items $(ls -1q $batch) --uploaded True
-    } || {
-      echo "dspace import failed, quitting... $(date '+%x %X')"
-      exit 1
-    }
-    echo "batch done!"
-    zip -jqr $IMPORTERSDIR/batch-archive.zip $batch/ && rm -r $batch
-    #   ^ no leading directories (/home/dspace/...), quiet output, recursive
+    > $DSPACE_IMPORT_LOG
+    if [[ $? -gt 0 ]]
+    then
+      echo "dspace import failed, skipping... $(date '+%x %X')"
+      echo "[$(date '+%x %X')] FAILED: import $batch" >> $DSPACE_IMPORT_LOG_FAIL
+    else
+      echo "batch done! ($(basename $batch))"
+      basename $batch >> $SUCCESSFUL
+      zip -qr $ZIP $batch && rm -r $batch
+    fi
   fi
 done
 
-sha256sum $IMPORTERSDIR/batch-archive.zip >> ~dspace/importers-backup-integrity.txt
+sha256sum $ZIP >> ~dspace/importers-backup-integrity.txt
+if [[ -f $DSPACE_IMPORT_LOG_FAIL && $(cat $DSPACE_IMPORT_LOG_FAIL | wc -l) -gt 0 ]]
+then
+  less $DSPACE_IMPORT_LOG_FAIL
+fi
