@@ -56,6 +56,7 @@ if ! sudo -v >/dev/null 2>/dev/null
 then
   echo "For best experience, sudoer power is recommended."
 fi
+# SUBDIR doesn't work as intended, there's an argument for that probably
 rsync -e "ssh -i ~${SENDER}/.ssh/id_rsa" -zh --info=name,progress2 --ignore-existing --log-file="$LOGFILE" -r "${SOURCE}/${SUBDIR}" "dspace@${SERVER}:${DEST}/${SUBDIR}"
 if [[ $? -eq 0 ]]
 then
