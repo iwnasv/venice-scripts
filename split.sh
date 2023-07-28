@@ -41,7 +41,7 @@ onfail () {
 dircount=0
 batchcount=0
 
-if [[ $(basename $(pwd)) != "importers" ]]; then
+if [[ $(basename $(pwd)) != "importers" ]]; then # TODO auto mallon na fygei, sto production t venice de legetai etsi
   echo "Warning: split.sh is run in a directory not named 'importers'"
   echo "Press enter if you're sure this directory contains dspace importers"
   echo "Changes WILL be written on disk if you do so! CTRL+C kills me"
@@ -72,7 +72,7 @@ for dir in *; do
       mkdir $mvto
       log "Batch $batchcount starting at $dir is in $mvto"
     fi
-    mv $dir $mvto
+    mv $dir $mvto # edw 8a vriskei ta importers, meta na zip k geia sas, se temporary storage k na exei rotation, meta apo kapoio kairo na svhnoun
     onfail "FATAL: couldn't move $pwd/$dir to $pwd/$mvto. Ensure this is a dspace importers directory and you've got the right permissions. Exiting with error code 1. $(date '+%x %X')."
     log "    $dir"
     ((dircount++))

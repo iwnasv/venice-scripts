@@ -6,7 +6,11 @@
 COLLECTION="a81650e4-a549-4d3c-8576-72d0e5820d51"
 EPERSON="info@ie.org"
 SPLIT="https://github.com/iwnasv/venice-scripts/raw/main/split.sh"
-IMPORTERSDIR=~dspace/importers
+IMPORTERSDIR=~dspace/importers # TODO argument
+# ~dspace/imports/importers
+# ~dspace/imports/mapfiles
+# ~dspace/imports/pool
+# ~dspace/imports/old temp, periexei gzipped batch backups, gia troubleshooting, rotation: ta svhnoume meta apo N meres
 
 askme () {
     if [[ -n $ASKME ]]
@@ -44,7 +48,7 @@ then
   exit 1
 fi
 
-if [[ -f  $IMPORTERSDIR/batch-archive.zip ]]
+if [[ -f  $IMPORTERSDIR/batch-archive.zip ]] # TODO: change paths to fit modern structure and create log directory
 then
   echo "OLD: $(sha256sum -z $IMPORTERSDIR/batch-archive.zip).old" > ~dspace/importers-backup-integrity.txt
   date "+%x %X" >> ~dspace/importers-backup-integrity.txt
@@ -53,7 +57,7 @@ fi
 cd $IMPORTERSDIR
 askme "$(pwd): about to split importers"
 
-if [[ ${SPLIT:0:5} == "https" ]]
+if [[ ${SPLIT:0:5} == "https" ]] # TODO na fygei apo dw, na to analavei to parent script
 then
   # if it's a url, curl it, otherwise just execute it
   curl -s "$SPLIT" | bash -s || {
@@ -66,7 +70,7 @@ else
     exit 1
   }
 fi
-# To do: ANSIBLE copy scripts to dspace's $HOME, github hosted split.sh with curl
+# TODO: ANSIBLE copy scripts to dspace's $HOME, github hosted split.sh with curl
 
 askme "Confriming dspace user shell access..."
 # You can comment this line out if your sudo config doesn't allow for a grace period, causing you to authenticate manually twice

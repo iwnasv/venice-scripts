@@ -5,7 +5,7 @@ query_conditions = "FROM cwf_pooltask as p_task " \
                    "JOIN cwf_workflowitem as w_item ON w_item.workflowitem_id = p_task.workflowitem_id " \
                    "JOIN metadatavalue as identifier ON identifier.dspace_object_id = w_item.item_id " \
                    "AND metadata_field_id = 24 " \
-                   "WHERE identifier.text_value LIKE %s "
+                   "WHERE identifier.text_value LIKE %s " # TODO opt arg to toggle LIKE/EQUAL
 
 def connect_to_database():
     return psycopg2.connect(
