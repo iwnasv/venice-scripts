@@ -3,6 +3,7 @@
 
 LOGFILE=/tmp/dspace-batch-split.log
 BATCHSIZE=500
+POOL="../pool"
 
 while getopts "s:" opt
 do
@@ -48,14 +49,6 @@ validate () {
 dircount=0
 batchcount=0
 
-if [[ $(basename $(pwd)) != "importers" ]]; then # TODO auto mallon na fygei, sto production t venice de legetai etsi
-  echo "Warning: split.sh is run in a directory not named 'importers'"
-  echo "Press enter if you're sure this directory contains dspace importers"
-  echo "Changes WILL be written on disk if you do so! CTRL+C kills me"
-  echo "(you probably want to cd ~dspace/importers)"
-  read
-fi
-
 if [[ ! -w . ]]; then
   echo "Error: split.sh is run in a directory it doesn't have write permission in."
   echo "Please type a user to sudo -u as (or su if that fails) and resume operation."
@@ -75,12 +68,12 @@ for dir in *; do
   if [[ -d $dir && validate $dir ]]; then
     if [[ $dircount -eq 0 ]]; then
       ((batchcount++))
-      mvto="$(date '+%F')-$batchcount"
+      mvto="$POOL/$(date '+%F')-$batchcount"
       mkdir $mvto
       log "Batch $batchcount starting at $dir is in $mvto"
     fi
-    mv $dir $mvto # edw 8a vriskei ta importers, meta na zip k geia sas, se temporary storage k na exei rotation, meta apo kapoio kairo na svhnoun
-    onfail "FATAL: couldn't move $pwd/$dir to $pwd/$mvto. Ensure this is a dspace importers directory and you've got the right permissions. Exiting with error code 1. $(date '+%x %X')."
+    cp -r $dir $mvto
+    onfail "FATAL: couldn't move $pwd/$dir to $mvto. Ensure this is a dspace importers directory and you've got the right permissions. Exiting with error code 1. $(date '+%x %X')."
     log "    $dir"
     ((dircount++))
     if [[ $dircount -eq $BATCHSIZE ]]; then

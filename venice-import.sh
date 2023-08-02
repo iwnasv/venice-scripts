@@ -67,9 +67,9 @@ done
 cd $IMPORTERSDIR
 askme "$(pwd): about to split importers"
 
-if [[ ${SPLIT:0:5} == "https" ]] # TODO na fygei apo dw, na to analavei to parent script
+if [[ ${SPLIT:0:5} == "https" ]]
 then
-  # if it's a url, curl it, otherwise just execute it
+  # if the splitting script is a url, curl it, otherwise just execute it
   curl -s "$SPLIT" | bash -s || {
     echo "Batch-splitting importers failed"
     exit 1
@@ -80,7 +80,6 @@ else
     exit 1
   }
 fi
-# TODO: ANSIBLE copy scripts to dspace's $HOME, github hosted split.sh with curl
 
 askme "Confriming dspace user shell access..."
 # You can comment this line out if your sudo config doesn't allow for a grace period, causing you to authenticate manually twice
@@ -90,32 +89,30 @@ then
   exit 1
 fi
 
-for batch in $IMPORTERSDIR/*
+for batch in $POOL/*
 do
   if [[ ! -d $batch ]]
   then
-    if [[ $(basename $batch) != "batch-archive.zip" ]]
-    then
-      echo "Warning: file $batch found; skipping it, I expect importers to be directories."
-    fi
+    echo "Warning: file $batch found; skipping it, I expect importers to be directories."
   else
-    DSPACE_IMPORT_LOG="$IMPORTERSDIR/../import-logs/$(basename $batch).log" #this is far from great but it does our job
+    DSPACE_IMPORT_LOG="$LOGDIR/$(basename $batch).log"
     #you may manually need to change the directory here to fit another project in the future. I'd rather not add more parameters...
-    echo $(date '+%x %X') -- Using batch: $batch, writing mapfile: ~dspace/mapfiles/mapfile_$(basename $batch), log: $DSPACE_IMPORT_LOG
+    echo $(date '+%x %X') -- Using batch: $batch, writing mapfile: $MAPFILESDIR/mapfile_$(basename $batch), log: $DSPACE_IMPORT_LOG
     askme "About to run dspace import. $EPERSON, $COLLECTION, $batch"
     sudo -u dspace /opt/dspace/bin/dspace \
-    import -a -e $EPERSON -c $COLLECTION -s "$batch" -m ~dspace/mapfiles/mapfile_$(basename $batch) -w \
+    import -a -e $EPERSON -c $COLLECTION -s "$batch" -m $MAPFILESDIR/mapfile_$(basename $batch) -w \
     > $DSPACE_IMPORT_LOG && {
-      # test me
+      # TODO test me
       python3 setValues.py --project 'venetia' --items $(ls -1q $batch) --uploaded True
     } || {
       echo "dspace import failed, quitting... $(date '+%x %X')"
       exit 1
     }
     echo "batch done!"
-    zip -jqr $IMPORTERSDIR/batch-archive.zip $batch/ && rm -r $batch
+    zip -jqr $OLD/batch-archive.zip $batch/ && rm -r $batch
     #   ^ no leading directories (/home/dspace/...), quiet output, recursive
+    #     na to testarw auto to zip command, de 8umamai an paei kati strava
   fi
 done
 
-sha256sum $IMPORTERSDIR/batch-archive.zip >> ~dspace/importers-backup-integrity.txt
+sha256sum $OLD/batch-archive.zip >> $LOGDIR/importers-backup-integrity.txt
