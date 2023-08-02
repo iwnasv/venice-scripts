@@ -7,7 +7,11 @@
 COLLECTION="a81650e4-a549-4d3c-8576-72d0e5820d51"
 EPERSON="info@ie.org"
 SPLIT="https://github.com/iwnasv/venice-scripts/raw/main/split.sh"
-IMPORTERSDIR=~dspace/importers # TODO argument
+IMPORTERSDIR=~dspace/import/importers # TODO argument
+MAPFILESDIR=~dspace/imports/mapfiles
+POOL=~dspace/imports/pool
+OLD=~dspace/imports/old
+LOGDIR=~dspace/imports/logs
 # ~dspace/imports/importers edw anevainoun k uparxoun ola genika
 # ~dspace/imports/mapfiles
 # ~dspace/imports/pool edw erxontai auta pou 8a ginoun split k import
@@ -43,18 +47,22 @@ do
   esac
 done
 
-if [[ ! -d $IMPORTERSDIR || ! -d ~dspace/mapfiles || ! -w $IMPORTERSDIR || ! -w ~dspace/mapfiles ]] # both directories present and writable
-# using -d as well to ensure it's a directory and not a regular file
-then
-  echo "This script expects the importers and mapfiles directories present under ~dspace and writable by the dspace user."
-  exit 1
-fi
+for dir in $IMPORTERSDIR $MAPFILESDIR $POOL $OLD $LOGDIR
+do
+  if [[ ! -d $dir ||  ! -w $dir ]]
+  then
+    echo "This script expects $dir present under ~dspace and writable by the dspace user."
+    exit 1
+  fi
+done
 
-if [[ -f  $IMPORTERSDIR/batch-archive.zip ]] # TODO: change paths to fit modern structure and create log directory
-then
-  echo "OLD: $(sha256sum -z $IMPORTERSDIR/batch-archive.zip).old" > ~dspace/importers-backup-integrity.txt
-  date "+%x %X" >> ~dspace/importers-backup-integrity.txt
-fi
+# if [[ -f  $IMPORTERSDIR/batch-archive.zip ]] # TODO: change paths to fit modern structure and create log directory
+# then
+#   echo "OLD: $(sha256sum -z $IMPORTERSDIR/batch-archive.zip).old" > ~dspace/importers-backup-integrity.txt
+#   date "+%x %X" >> ~dspace/importers-backup-integrity.txt
+# fi
+#
+# Kane apla ena sha256sum >> sto telos
 
 cd $IMPORTERSDIR
 askme "$(pwd): about to split importers"
