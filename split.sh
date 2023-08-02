@@ -38,6 +38,13 @@ onfail () {
   fi
 }
 
+validate () {
+    if [[ $(count-items.py "$1") -ne 0 ]]
+  then
+    return 1
+  fi
+}
+
 dircount=0
 batchcount=0
 
@@ -65,7 +72,7 @@ if [[ ! -w . ]]; then
 fi
 
 for dir in *; do
-  if [[ -d $dir ]]; then
+  if [[ -d $dir && validate $dir ]]; then
     if [[ $dircount -eq 0 ]]; then
       ((batchcount++))
       mvto="$(date '+%F')-$batchcount"
