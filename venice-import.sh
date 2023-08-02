@@ -1,5 +1,6 @@
 #!/bin/bash
 # USAGE: Not much to do, you just call the script this time
+# Conveniently run over ssh by the upload script
 # It expects ~dspace to have the importers and mapfiles directories
 
 # Venice defaults
@@ -7,10 +8,11 @@ COLLECTION="a81650e4-a549-4d3c-8576-72d0e5820d51"
 EPERSON="info@ie.org"
 SPLIT="https://github.com/iwnasv/venice-scripts/raw/main/split.sh"
 IMPORTERSDIR=~dspace/importers # TODO argument
-# ~dspace/imports/importers
+# ~dspace/imports/importers edw anevainoun k uparxoun ola genika
 # ~dspace/imports/mapfiles
-# ~dspace/imports/pool
+# ~dspace/imports/pool edw erxontai auta pou 8a ginoun split k import
 # ~dspace/imports/old temp, periexei gzipped batch backups, gia troubleshooting, rotation: ta svhnoume meta apo N meres
+# ~dspace/imports/logs unified log directory
 
 askme () {
     if [[ -n $ASKME ]]
