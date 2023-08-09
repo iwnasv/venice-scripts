@@ -42,7 +42,7 @@ do
     v)
       if [[ $OPTARG -ge 1 && $OPTARG -le 3 ]]
       then
-        SERVER="ie-vm${OPTARG}.theo.auth.gr" # to do: sed?
+        SERVER="ie-vm${OPTARG}.theo.auth.gr"
       else
         ex "Venice VMs range is 1-3"
       fi
