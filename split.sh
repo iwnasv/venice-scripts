@@ -1,5 +1,5 @@
 #!/bin/bash
-# USAGE: cd to /importers and ./split.sh
+# USAGE: cd to /importers and run split.sh
 
 LOGFILE=/tmp/dspace-batch-split.log
 BATCHSIZE=500
