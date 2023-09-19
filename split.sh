@@ -15,6 +15,8 @@ do
       ;;
     *)
       echo "Usage: split.sh [-s batchsize]"
+      exit 1
+      #TODO: -p for pool path
       ;;
   esac
 done
@@ -43,6 +45,8 @@ validate () {
     if [[ $(count-items.py "$1") -ne 0 ]]
   then
     return 1
+  else
+    echo test # this works for the if statement used later, it's fine. just 0 exit code doesn't do it.
   fi
 }
 
@@ -65,7 +69,7 @@ if [[ ! -w . ]]; then
 fi
 
 for dir in *; do
-  if [[ -d $dir && validate $dir ]]; then
+  if [[ -d "$dir" && $(validate "$dir") ]]; then
     if [[ $dircount -eq 0 ]]; then
       ((batchcount++))
       mvto="$POOL/$(date '+%F')-$batchcount"
